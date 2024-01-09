@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const http = require("http");
 const Note = require("./models/note");
 
 const app = express();
@@ -24,13 +23,13 @@ app.get("/api/notes/:id", (request, response, next) => {
 });
 
 app.delete("/api/notes/:id", (request, response, next) => {
-  Note.findByIdAndDelete(request.params.id).then((result) => {
+  Note.findByIdAndDelete(request.params.id).then(() => {
     response.status(204).end();
   }).catch((e) => next(e));
 });
 
 app.post("/api/notes", (request, response, next) => {
-  const body = request.body;
+  const { body } = request;
   const note = new Note({
     content: body.content,
     important: body.important || false,
@@ -41,7 +40,7 @@ app.post("/api/notes", (request, response, next) => {
   }).catch((e) => next(e));
 });
 
-app.put("/api/notes/:id", (request, response) => {
+app.put("/api/notes/:id", (request, response, next) => {
   const { content, important } = request.body;
 
   Note.findByIdAndUpdate(request.params.id, { content, important }, {
@@ -64,15 +63,14 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
-  } else if (error.name === "ValidationError") {
+  } if (error.name === "ValidationError") {
     return response.status(400).json({ error: error.message });
   }
-
   next(error);
 };
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT;
+const { PORT } = process.env;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
